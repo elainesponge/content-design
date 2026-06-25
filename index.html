@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>content-design — what it can do (1-min sharing)</title>
+
+<!-- ============================================================
+     FONTS — distinctive, non-system. Display: Space Grotesk (geometric,
+     techy but warm). Mono: JetBrains Mono (the skill/command voice).
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES (THEME)
+   Developer-IDE aesthetic. Input = electric cyan, Output = warm amber.
+   Change these to retheme the whole deck.
+   ============================================================ */
+:root{
+  --stage-bg:#05060a;            /* letterbox color outside the stage */
+  --slide-bg:#0a0d14;            /* deck canvas */
+  --panel:#11151f;               /* card surface */
+  --panel-2:#161b27;             /* inner media well */
+  --line:#222a3a;                /* hairlines / borders */
+  --ink:#f4f6fb;                 /* primary text */
+  --muted:#8a93a8;               /* secondary text */
+  --faint:#5a6275;               /* tertiary / footers */
+
+  --in:#38d0ff;                  /* INPUT accent — electric cyan */
+  --in-soft:rgba(56,208,255,.14);
+  --out:#ffb24a;                 /* OUTPUT accent — warm amber */
+  --out-soft:rgba(255,178,74,.14);
+  --good:#46e0a8;                /* positive / mint */
+
+  --font-display:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+
+  --ease:cubic-bezier(.16,1,.3,1);
+  --dur:.7s;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ===========================================================
+   FIXED 16:9 STAGE — viewport-base.css (included IN FULL, mandatory)
+   Slides authored at 1920×1080 and scaled as a whole.
+   =========================================================== */
+html,body{
+  width:100%;height:100%;margin:0;overflow:hidden;
+  background:var(--stage-bg);
+}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg)}
+.deck-stage{
+  position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;
+  transform-origin:0 0;background:var(--slide-bg);
+}
+.slide{
+  position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;
+  visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg);
+}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
+  .deck-viewport{position:static;overflow:visible;background:#fff}
+  .deck-stage{position:static;width:auto;height:auto;transform:none !important;background:none}
+  .slide{position:relative;display:block !important;visibility:visible !important;opacity:1 !important;
+    pointer-events:auto !important;width:1920px;height:1080px;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .deck-controls{display:none !important}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.2s !important}
+}
+
+/* ===========================================================
+   SHARED ATMOSPHERE — subtle grid + glow, gives depth (no flat fill)
+   =========================================================== */
+.slide{
+  font-family:var(--font-display);color:var(--ink);
+  padding:96px 120px;
+  background:
+    radial-gradient(1200px 700px at 82% -8%, rgba(56,208,255,.07), transparent 60%),
+    radial-gradient(1000px 650px at 8% 112%, rgba(255,178,74,.06), transparent 60%),
+    linear-gradient(var(--slide-bg),var(--slide-bg));
+}
+.grid-bg{
+  position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(circle at 50% 42%, #000 0%, transparent 78%);
+  mask-image:radial-gradient(circle at 50% 42%, #000 0%, transparent 78%);
+}
+
+/* ---- reveal animation (staggered) ---- */
+.reveal{opacity:0;transform:translateY(34px);
+  transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.slide.visible .reveal{opacity:1;transform:translateY(0)}
+.slide.visible .reveal:nth-child(1){transition-delay:.05s}
+.slide.visible .d1{transition-delay:.12s}
+.slide.visible .d2{transition-delay:.22s}
+.slide.visible .d3{transition-delay:.34s}
+.slide.visible .d4{transition-delay:.46s}
+
+/* ---- shared text bits ---- */
+.kicker{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-mono);
+  font-size:20px;letter-spacing:.22em;text-transform:uppercase;color:var(--in);font-weight:500}
+.kicker .dot{width:10px;height:10px;border-radius:50%;background:var(--in);
+  box-shadow:0 0 18px 2px var(--in)}
+h1{font-size:128px;line-height:.98;font-weight:700;letter-spacing:-.03em}
+h2{font-size:78px;line-height:1.02;font-weight:700;letter-spacing:-.02em}
+.sub{font-size:34px;color:var(--muted);line-height:1.45;max-width:1180px}
+.foot{position:absolute;left:120px;bottom:56px;font-family:var(--font-mono);
+  font-size:22px;color:var(--faint);letter-spacing:.04em}
+.pagenum{position:absolute;right:120px;bottom:56px;font-family:var(--font-mono);
+  font-size:22px;color:var(--faint)}
+
+/* command chip */
+.cmd{display:inline-block;font-family:var(--font-mono);font-size:30px;font-weight:500;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--good);
+  padding:18px 28px;border-radius:14px}
+.cmd .slash{color:var(--in)}
+
+/* ===========================================================
+   TITLE / CLOSE SLIDES
+   =========================================================== */
+.center{display:flex;flex-direction:column;justify-content:center;height:100%}
+.title-h1 .hl{color:var(--in)}
+.badges{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px}
+.badge{font-family:var(--font-mono);font-size:24px;color:var(--ink);background:var(--panel);
+  border:1px solid var(--line);padding:16px 24px;border-radius:999px}
+.badge .n{color:var(--out);margin-right:10px;font-weight:700}
+
+/* ===========================================================
+   CAPABILITY SLIDES — header + Input→Output split
+   =========================================================== */
+.cap-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px}
+.cap-head .titles h2{margin-bottom:14px}
+.cap-head .skill-tag{font-family:var(--font-mono);font-size:26px;color:var(--in)}
+.cap-head .num{font-family:var(--font-display);font-weight:700;font-size:240px;line-height:.74;
+  color:transparent;-webkit-text-stroke:2px var(--line);user-select:none}
+
+.io{display:grid;grid-template-columns:1fr 120px 1fr;align-items:stretch;height:560px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;
+  display:flex;flex-direction:column;overflow:hidden;position:relative}
+.panel::before{content:"";position:absolute;left:0;top:0;height:5px;width:100%}
+.panel--input::before{background:var(--in)}
+.panel--output::before{background:var(--out)}
+
+.panel-label{display:flex;align-items:center;gap:16px;padding:26px 32px;font-family:var(--font-mono);
+  font-size:24px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  border-bottom:1px solid var(--line)}
+.panel-label .tag{width:16px;height:16px;border-radius:5px}
+.panel--input .panel-label{color:#bfeaff}
+.panel--input .tag{background:var(--in);box-shadow:0 0 16px var(--in)}
+.panel--output .panel-label{color:#ffe2bb}
+.panel--output .tag{background:var(--out);box-shadow:0 0 16px var(--out)}
+
+/* media well — DROP YOUR VISUAL HERE */
+.media{flex:1;position:relative;background:var(--panel-2);
+  display:flex;align-items:center;justify-content:center}
+.media img,.media video{width:100%;height:100%;object-fit:cover;display:block}
+.media-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  color:var(--muted);text-align:center;padding:40px}
+.media-ph .ic{font-size:60px;opacity:.5}
+.panel--input .media-ph .ic{color:var(--in)}
+.panel--output .media-ph .ic{color:var(--out)}
+.media-ph .hint{font-size:26px;max-width:420px;line-height:1.45}
+.media-ph code{font-family:var(--font-mono);font-size:20px;color:var(--good)}
+
+/* arrow between the two panels */
+.arrow{display:flex;align-items:center;justify-content:center}
+.arrow svg{width:84px;height:84px}
+.arrow .ln{stroke:var(--line)}
+.arrow .hd{fill:var(--out)}
+.arrow .pulse{stroke:var(--in);stroke-dasharray:6 10;opacity:.9;
+  animation:flow 1.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-32}}
+
+/* ===========================================================
+   INLINE EDIT affordance (default-on per skill)
+   =========================================================== */
+.edit-hotzone{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000;cursor:pointer}
+.edit-toggle{position:fixed;top:18px;left:18px;z-index:10001;background:var(--panel);
+  border:1px solid var(--line);color:var(--ink);font-size:22px;border-radius:12px;
+  width:52px;height:52px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}
+.edit-toggle.active{outline:2px solid var(--in)}
+[contenteditable="true"]{outline:2px dashed var(--in);outline-offset:6px;border-radius:6px}
+
+/* nav hint + progress (chrome, outside stage design) */
+.navhint{position:fixed;right:22px;top:18px;font-family:var(--font-mono);font-size:18px;
+  color:var(--faint);opacity:.7;z-index:1000}
+.progress{position:fixed;left:0;top:0;height:4px;background:var(--in);width:0;
+  transition:width .45s var(--ease);z-index:1000;box-shadow:0 0 14px var(--in)}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="navhint">← → · Space · F fullscreen · E edit</div>
+
+<!-- inline editing controls -->
+<div class="edit-hotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+
+<div class="deck-viewport">
+  <main class="deck-stage" id="deckStage">
+
+    <!-- ===================== SLIDE 1 — TITLE ===================== -->
+    <section class="slide title-slide active center">
+      <div class="grid-bg"></div>
+      <div class="kicker reveal d1"><span class="dot"></span>Content Design · AI Skill</div>
+      <h1 class="title-h1 reveal d2" style="margin-top:24px">What <span class="hl">content-design</span><br>can do for you</h1>
+      <p class="sub reveal d3" style="margin-top:36px">A skill that knows our product voices, reads Figma
+        components, and writes &amp; reviews on-brand copy.</p>
+      <div class="reveal d4" style="margin-top:48px"><span class="cmd"><span class="slash">/</span>content-design</span></div>
+      <div class="badges reveal d4" style="margin-top:40px">
+        <span class="badge"><span class="n">01</span>Benchmark naming &amp; microcopy</span>
+        <span class="badge"><span class="n">02</span>Write first draft</span>
+        <span class="badge"><span class="n">03</span>Content review</span>
+      </div>
+      <div class="foot">content-design · 1-min sharing</div>
+      <div class="pagenum">01 / 04</div>
+    </section>
+
+    <!-- ===================== SLIDE 2 — CAPABILITY 1 ===================== -->
+    <section class="slide">
+      <div class="grid-bg"></div>
+      <div class="cap-head">
+        <div class="titles">
+          <div class="kicker reveal" style="margin-bottom:18px"><span class="dot"></span>Capability 01</div>
+          <h2 class="reveal d1">Benchmark naming<br>&amp; microcopy</h2>
+          <div class="skill-tag reveal d2">via content-benchmarker</div>
+        </div>
+        <div class="num reveal">1</div>
+      </div>
+      <div class="io">
+        <!-- INPUT -->
+        <div class="panel panel--input reveal d2">
+          <div class="panel-label"><span class="tag"></span>Input</div>
+          <div class="media media--input">
+            <img src="benchmarker_before.jpeg" alt="Benchmark input — feature naming candidates">
+          </div>
+        </div>
+        <!-- ARROW -->
+        <div class="arrow reveal d3" aria-hidden="true">
+          <svg viewBox="0 0 80 80">
+            <line class="ln" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <line class="pulse" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <polygon class="hd" points="56,26 78,40 56,54"/>
+          </svg>
+        </div>
+        <!-- OUTPUT -->
+        <div class="panel panel--output reveal d4">
+          <div class="panel-label"><span class="tag"></span>Output</div>
+          <div class="media media--output">
+            <video src="benchmarker_after.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+      </div>
+      <div class="foot">content-design · benchmark</div>
+      <div class="pagenum">02 / 04</div>
+    </section>
+
+    <!-- ===================== SLIDE 3 — CAPABILITY 2 ===================== -->
+    <section class="slide">
+      <div class="grid-bg"></div>
+      <div class="cap-head">
+        <div class="titles">
+          <div class="kicker reveal" style="margin-bottom:18px"><span class="dot"></span>Capability 02</div>
+          <h2 class="reveal d1">Write first draft</h2>
+          <div class="skill-tag reveal d2">product voice + component rules</div>
+        </div>
+        <div class="num reveal">2</div>
+      </div>
+      <div class="io">
+        <div class="panel panel--input reveal d2">
+          <div class="panel-label"><span class="tag"></span>Input</div>
+          <div class="media media--input">
+            <img src="write_first_draft_before.jpeg" alt="Write first draft — input context">
+          </div>
+        </div>
+        <div class="arrow reveal d3" aria-hidden="true">
+          <svg viewBox="0 0 80 80">
+            <line class="ln" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <line class="pulse" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <polygon class="hd" points="56,26 78,40 56,54"/>
+          </svg>
+        </div>
+        <div class="panel panel--output reveal d4">
+          <div class="panel-label"><span class="tag"></span>Output</div>
+          <div class="media media--output">
+            <video src="write_first_draft_after.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+      </div>
+      <div class="foot">content-design · first draft</div>
+      <div class="pagenum">03 / 04</div>
+    </section>
+
+    <!-- ===================== SLIDE 4 — CAPABILITY 3 ===================== -->
+    <section class="slide">
+      <div class="grid-bg"></div>
+      <div class="cap-head">
+        <div class="titles">
+          <div class="kicker reveal" style="margin-bottom:18px"><span class="dot"></span>Capability 03</div>
+          <h2 class="reveal d1">Content review</h2>
+          <div class="skill-tag reveal d2">severity-tagged audit + rewrites</div>
+        </div>
+        <div class="num reveal">3</div>
+      </div>
+      <div class="io">
+        <div class="panel panel--input reveal d2">
+          <div class="panel-label"><span class="tag"></span>Input</div>
+          <div class="media media--input">
+            <img src="review_before.jpeg" alt="Content review — input screen copy">
+          </div>
+        </div>
+        <div class="arrow reveal d3" aria-hidden="true">
+          <svg viewBox="0 0 80 80">
+            <line class="ln" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <line class="pulse" x1="6" y1="40" x2="60" y2="40" stroke-width="3"/>
+            <polygon class="hd" points="56,26 78,40 56,54"/>
+          </svg>
+        </div>
+        <div class="panel panel--output reveal d4">
+          <div class="panel-label"><span class="tag"></span>Output</div>
+          <div class="media media--output">
+            <video src="review_after.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+      </div>
+      <div class="foot">content-design · review</div>
+      <div class="pagenum">04 / 04</div>
+    </section>
+
+
+  </main>
+</div>
+
+<script>
+/* ===========================================================
+   SLIDE PRESENTATION CONTROLLER
+   Fixed 1920×1080 stage scaled uniformly to the viewport.
+   =========================================================== */
+class SlidePresentation{
+  constructor(){
+    this.slides=[...document.querySelectorAll('.slide')];
+    this.stage=document.getElementById('deckStage');
+    this.progress=document.getElementById('progress');
+    this.i=0;
+    this.scaleStage();
+    window.addEventListener('resize',()=>this.scaleStage());
+    this.bindNav();
+    this.show(0);
+  }
+  /* scale the whole stage; letterbox/pillarbox, never reflow */
+  scaleStage(){
+    const f=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+    const x=(window.innerWidth-1920*f)/2;
+    const y=(window.innerHeight-1080*f)/2;
+    this.stage.style.transform=`translate(${x}px,${y}px) scale(${f})`;
+  }
+  show(n){
+    this.i=Math.max(0,Math.min(this.slides.length-1,n));
+    this.slides.forEach((s,k)=>{
+      const on=k===this.i;
+      s.classList.toggle('active',on);
+      s.classList.toggle('visible',on);
+    });
+    this.progress.style.width=(this.i/(this.slides.length-1)*100)+'%';
+  }
+  next(){this.show(this.i+1)}
+  prev(){this.show(this.i-1)}
+  bindNav(){
+    /* keyboard */
+    document.addEventListener('keydown',e=>{
+      if(e.target.getAttribute('contenteditable')==='true') return; /* don't navigate while editing */
+      if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();this.next()}
+      else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();this.prev()}
+      else if(e.key==='Home'){this.show(0)}
+      else if(e.key==='End'){this.show(this.slides.length-1)}
+      else if(e.key==='f'||e.key==='F'){const el=document.documentElement;
+        document.fullscreenElement?document.exitFullscreen():el.requestFullscreen()}
+    });
+    /* click left/right half */
+    this.stage.addEventListener('click',e=>{
+      if(window.__editMode) return;
+      const r=this.stage.getBoundingClientRect();
+      (e.clientX-r.left > r.width/2)?this.next():this.prev();
+    });
+    /* touch swipe */
+    let sx=0;
+    window.addEventListener('touchstart',e=>sx=e.changedTouches[0].clientX,{passive:true});
+    window.addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-sx;
+      if(Math.abs(dx)>50){dx<0?this.next():this.prev()}
+    },{passive:true});
+    /* mouse wheel */
+    let wlock=false;
+    window.addEventListener('wheel',e=>{
+      if(wlock) return; wlock=true; setTimeout(()=>wlock=false,600);
+      (e.deltaY>0)?this.next():this.prev();
+    },{passive:true});
+  }
+}
+const deck=new SlidePresentation();
+
+/* ===========================================================
+   INLINE EDITING — JS-based hover (400ms grace), E key, click-to-edit
+   =========================================================== */
+const editor={
+  isActive:false,
+  toggle(){
+    this.isActive=!this.isActive; window.__editMode=this.isActive;
+    const btn=document.getElementById('editToggle');
+    btn.classList.toggle('active',this.isActive);
+    document.querySelectorAll('h1,h2,p.sub,.skill-tag,.badge,.hint,.cmd,.kicker')
+      .forEach(el=>el.setAttribute('contenteditable',this.isActive));
+  }
+};
+const hotzone=document.querySelector('.edit-hotzone');
+const editToggle=document.getElementById('editToggle');
+let hideTimeout=null;
+hotzone.addEventListener('mouseenter',()=>{clearTimeout(hideTimeout);editToggle.classList.add('show')});
+hotzone.addEventListener('mouseleave',()=>{hideTimeout=setTimeout(()=>{if(!editor.isActive)editToggle.classList.remove('show')},400)});
+editToggle.addEventListener('mouseenter',()=>clearTimeout(hideTimeout));
+editToggle.addEventListener('mouseleave',()=>{hideTimeout=setTimeout(()=>{if(!editor.isActive)editToggle.classList.remove('show')},400)});
+editToggle.addEventListener('click',()=>editor.toggle());
+hotzone.addEventListener('click',()=>editor.toggle());
+document.addEventListener('keydown',e=>{
+  if((e.key==='e'||e.key==='E') && e.target.getAttribute('contenteditable')!=='true'){editor.toggle()}
+});
+</script>
+</body>
+</html>
