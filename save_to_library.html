@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Save to Library Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#E9ECF4; --panel:#F7F8FC; --ink:#1C2230; --muted:#5F6779; --line:#E3E6EF;
+  --border:#D5DAE4; --box:#C3C9D6; --accent:#3FB6CC; --accent-soft:#DDF3F8; --accent-ink:#0B5568;
+  --link:#0C6F85; --cta:#5AC8DC; --toast:#1C2230; --toast-link:#7FDCEC; --well:#E3E6EF;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Lexend,system-ui,sans-serif;min-height:100vh}
+button,select,a{font-family:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+
+/* Review controls */
+.review{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:14px 16px;background:#FFFFFF;border-bottom:1px solid var(--border);font-size:14px}
+.review h1{margin:0;font-size:15px;font-weight:600;margin-right:auto}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#FFFFFF;color:var(--ink);padding:0 14px;height:36px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:500}
+.seg button+button{border-left:1px solid var(--border)}
+.review label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;min-height:36px}
+.review input{width:18px;height:18px;accent-color:var(--link)}
+.reset{border:1px solid var(--border);background:#FFFFFF;border-radius:10px;height:36px;padding:0 14px;font-size:14px;color:var(--ink)}
+
+/* Stage */
+.stage{display:flex;justify-content:center;padding:28px 16px 120px}
+.col{width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px}
+
+.toolbar{align-self:flex-start;display:flex;align-items:center;gap:4px;padding:6px;background:var(--panel);border-radius:28px;box-shadow:0 2px 10px rgba(40,50,80,.08)}
+.toolbar button{height:44px;min-width:44px;border:0;border-radius:22px;background:transparent;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.toolbar .unframe{padding:0 14px;background:#ECEEF5;font-size:17px;font-weight:500}
+.toolbar button[aria-expanded="true"]{background:#ECEEF5}
+.toolbar svg{width:20px;height:20px}
+
+.panel{background:var(--panel);border-radius:22px;box-shadow:0 8px 32px rgba(40,50,80,.12);display:flex;flex-direction:column}
+.panel[hidden]{display:none}
+.head{display:flex;align-items:baseline;justify-content:space-between;padding:20px 20px 14px}
+.head h2{margin:0;font-size:19px;font-weight:500}
+.count{font-size:14px;color:var(--muted)}
+
+.thumbs{display:flex;align-items:center;gap:6px;padding:0 20px 18px;overflow-x:auto}
+.th{flex:none;width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.th.media{color:#FFFFFF}
+.th.file{background:var(--well);color:var(--muted)}
+.th{position:relative;overflow:hidden}
+.th svg{width:20px;height:20px}
+.th .art{position:absolute;inset:0;width:100%;height:100%}
+.th .badge{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:10px;background:rgba(20,24,34,.55);display:flex;align-items:center;justify-content:center}
+.th .badge svg{width:10px;height:10px;margin-left:1px}
+.erow .who .th .badge{width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:12px}
+.erow .who .th .badge svg{width:12px;height:12px}
+.th.off{opacity:.35}
+.divider{flex:none;width:1px;height:28px;background:var(--border)}
+
+.sec{border-top:1px solid var(--line);padding:16px 20px 8px;display:flex;flex-direction:column;gap:4px}
+.sec[hidden]{display:none}
+.label{font-size:14px;font-weight:500;color:var(--muted);padding-bottom:4px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0;border:0;background:transparent;text-align:left;color:var(--ink);width:100%}
+.row .t{display:flex;flex-direction:column;gap:2px}
+.row .t b{font-size:16px;font-weight:400}
+.row .t span{font-size:13px;color:var(--muted)}
+.check{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--box);background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+.check svg{width:14px;height:14px;visibility:hidden}
+.row[aria-pressed="true"] .check{background:var(--accent);border-color:var(--accent)}
+.row[aria-pressed="true"] .check svg{visibility:visible}
+
+.el{gap:12px;padding-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:44px;padding:0 16px;border-radius:22px;font-size:15px;background:#FFFFFF;border:1px solid var(--border);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border:2px solid var(--accent);color:var(--accent-ink);font-weight:500;padding:0 15px}
+
+.list{display:flex;flex-direction:column}
+.lrow{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0;border:0;background:transparent;font-size:16px;color:var(--ink);width:100%;text-align:left}
+.radio{flex:none;width:24px;height:24px;border-radius:12px;border:2px solid var(--box);background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+.radio i{width:8px;height:8px;border-radius:4px}
+.lrow[aria-pressed="true"] .radio{background:var(--accent);border-color:var(--accent)}
+.lrow[aria-pressed="true"] .radio i{background:#FFFFFF}
+
+.each{display:flex;flex-direction:column;gap:8px}
+.erow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px}
+.erow .who{display:flex;align-items:center;gap:12px;min-width:0}
+.erow .who .th{width:48px;height:48px}
+.erow .who div:last-child{display:flex;flex-direction:column;gap:2px}
+.erow .who b{font-size:15px;font-weight:400}
+.erow .who span{font-size:13px;color:var(--muted)}
+.sel{position:relative;flex:none;width:136px}
+.sel select{appearance:none;-webkit-appearance:none;width:100%;height:44px;padding:0 40px 0 16px;border-radius:22px;border:1px solid var(--border);background:#FFFFFF;color:var(--ink);font-size:15px;cursor:pointer}
+.sel.on select{border:2px solid var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:500;padding-left:15px}
+.sel svg{position:absolute;right:16px;top:14px;width:16px;height:16px;pointer-events:none;color:var(--muted)}
+.sel.on svg{color:var(--accent-ink)}
+
+.hint{font-size:13px;line-height:1.5;color:var(--muted)}
+.link{align-self:flex-start;display:flex;align-items:center;min-height:44px;padding:0;border:0;background:transparent;font-size:14px;font-weight:500;color:var(--link)}
+
+.foot{padding:8px 20px 20px}
+.save{width:100%;height:56px;border:0;border-radius:12px;background:var(--cta);color:#FFFFFF;font-size:19px;font-weight:500}
+.save:disabled{background:#C9D3DC;cursor:not-allowed}
+
+.toast{position:fixed;left:16px;right:16px;bottom:32px;margin:0 auto;width:fit-content;max-width:calc(100% - 32px);transform:translateY(20px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;display:flex;align-items:center;gap:16px;padding:6px 8px 6px 20px;background:var(--toast);border-radius:14px;box-shadow:0 8px 24px rgba(40,50,80,.2)}
+.toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.toast span{font-size:15px;color:#FFFFFF;white-space:nowrap}
+.toast a{display:flex;align-items:center;height:44px;padding:0 12px;font-size:15px;font-weight:500;color:var(--toast-link);text-decoration:none}
+
+@media (max-width:480px){
+  .review h1{width:100%}
+  .head,.thumbs{padding-left:16px;padding-right:16px}
+  .sec{padding-left:16px;padding-right:16px}
+  .foot{padding:8px 16px 16px}
+  .sel{width:124px}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="review" aria-label="Prototype controls">
+  <h1>Save to library · multi-select prototype</h1>
+  <div class="seg" role="group" aria-label="Element picker style">
+    <button type="button" data-variant="chips" aria-pressed="true">Chips</button>
+    <button type="button" data-variant="list" aria-pressed="false">Vertical list</button>
+  </div>
+  <label><input type="checkbox" id="dupes"> 2 already in library</label>
+  <button type="button" class="reset" id="reset">Reset</button>
+</div>
+
+<main class="stage">
+  <div class="col">
+    <div class="toolbar">
+      <button type="button" class="unframe"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2v20M17 2v20M2 7h20M2 17h20"/></svg>Unframe</button>
+      <button type="button" aria-label="Duplicate"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="8" width="13" height="13" rx="2"/><path d="M8 8V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"/></svg></button>
+      <button type="button" id="libBtn" aria-label="Save to library" aria-expanded="true" aria-controls="panel"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V9a2 2 0 0 0-2-2h-7l-2-3H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M18 15v6M15 18h6"/></svg></button>
+      <button type="button" aria-label="Download"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6 11l6 6 6-6M4 21h16"/></svg></button>
+      <button type="button" aria-label="Delete"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg></button>
+    </div>
+
+    <section class="panel" id="panel" aria-labelledby="panelTitle">
+      <div class="head">
+        <h2 id="panelTitle">Save to library</h2>
+        <span class="count">8 selected</span>
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+
+      <div class="sec">
+        <div class="label">Saving to</div>
+        <button type="button" class="row" id="genRow" aria-pressed="true">
+          <span class="t"><b>Generated assets</b><span>1 image, 1 video, 1 audio, 1 doc</span></span>
+          <span class="check"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+        </button>
+        <button type="button" class="row" id="upRow" aria-pressed="true">
+          <span class="t"><b>Uploads</b><span>1 image, 1 video, 1 audio, 1 doc</span></span>
+          <span class="check"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+        </button>
+      </div>
+
+      <div class="sec el" id="elSec">
+        <div class="label" style="padding-bottom:0">Also save as element</div>
+        <div id="elBody"></div>
+        <div class="hint" id="elHint"></div>
+        <button type="button" class="link" id="modeLink"></button>
+      </div>
+
+      <div class="foot">
+        <button type="button" class="save" id="saveBtn">Save</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><a href="#" id="toastView">View</a></div>
+
+<script>
+(function(){
+  var TYPES = ['Character','Location','Prop','Style','Others'];
+  var ICON = {
+    play:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+    audio:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4"/></svg>',
+    doc:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
+    chev:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+  };
+  var ASSETS = [
+    {id:'gi', src:'gen', kind:'image', color:'#B9C4AE'},
+    {id:'gv', src:'gen', kind:'video', color:'#A9B3B8'},
+    {id:'ga', src:'gen', kind:'audio'},
+    {id:'gd', src:'gen', kind:'doc'},
+    {id:'ui', src:'up',  kind:'image', color:'#BDB5C9'},
+    {id:'uv', src:'up',  kind:'video', color:'#C8B9A4'},
+    {id:'ua', src:'up',  kind:'audio'},
+    {id:'ud', src:'up',  kind:'doc'}
+  ];
+  var KIND = {image:'Image', video:'Video', audio:'Audio', doc:'Doc'};
+  var NAME = {gi:'Image 1', gv:'Video 1', ui:'Image 2', uv:'Video 2', ga:'Audio 1', gd:'Doc 1', ua:'Audio 2', ud:'Doc 2'};
+  // Simple illustrated previews (inline SVG, no external images)
+  var ART = {
+    gi: '<svg class="art" aria-hidden="true" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="a1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9C8D6"/><stop offset="1" stop-color="#E6DDCB"/></linearGradient></defs><rect width="48" height="48" fill="url(#a1)"/><rect y="34" width="48" height="14" fill="#A9A27A"/><path d="M14 48c0-9 4.5-14 10-14s10 5 10 14z" fill="#7C8C6A"/><path d="M15.5 23c0-7 3.8-11 8.5-11s8.5 4 8.5 11c0 3-1 5-2 6.5l-13 0c-1-1.5-2-3.5-2-6.5z" fill="#8A5E3F"/><circle cx="24" cy="23" r="7" fill="#EBC6A6"/><path d="M17 21c1.5-5 4-7 7-7s5.5 2 7 7c-3-2-9-2-14 0z" fill="#8A5E3F"/></svg>',
+    gv: '<svg class="art" aria-hidden="true" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E99A3"/><stop offset="1" stop-color="#C3C8C9"/></linearGradient></defs><rect width="48" height="48" fill="url(#a2)"/><path d="M0 26c6-3 12-4 18-2s14 1 30-3v27H0z" fill="#56624A"/><path d="M0 32c10-2 20-1 30 0s14 0 18-1v17H0z" fill="#B49F69"/><path d="M0 40c12-2 30-2 48 0v8H0z" fill="#C9B47C"/><rect x="29" y="30" width="1.6" height="5" fill="#3E3A33"/><circle cx="29.8" cy="29.4" r="1.3" fill="#3E3A33"/></svg>',
+    ui: '<svg class="art" aria-hidden="true" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="a3" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#E7DDF0"/><stop offset="1" stop-color="#B7AEC6"/></radialGradient></defs><rect width="48" height="48" fill="url(#a3)"/><ellipse cx="24" cy="41" rx="11" ry="2.5" fill="#9E95AE"/><path d="M20 12h8l-1 3h-6z" fill="#4E4A5A"/><path d="M24 7a3 3 0 0 1 3 3h-6a3 3 0 0 1 3-3z" fill="none" stroke="#4E4A5A" stroke-width="1.5"/><rect x="17" y="15" width="14" height="22" rx="3" fill="#B9773E"/><rect x="19.5" y="18" width="9" height="16" rx="2" fill="#F6D99A"/><circle cx="24" cy="27" r="3" fill="#FFF3D1"/><rect x="16" y="36" width="16" height="3" rx="1" fill="#4E4A5A"/></svg>',
+    uv: '<svg class="art" aria-hidden="true" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9B98E"/><stop offset="1" stop-color="#EAD9BD"/></linearGradient></defs><rect width="48" height="48" fill="url(#a4)"/><circle cx="34" cy="16" r="5" fill="#F4E3C3"/><path d="M8 34V22h3v-3h2v3h3v-6h2v-3h2v3h2v6h3v-4h2v4h3v12z" fill="#5E5246"/><path d="M0 34c8-2 18-3 26-1s16 1 22 0v14H0z" fill="#7A6A52"/><path d="M0 40c10-2 26-2 48 0v8H0z" fill="#8F7D60"/></svg>'
+  };
+  var BADGE = '<span class="badge"><svg aria-hidden="true" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M8 5v14l11-7z"/></svg></span>';
+  var SRC = {gen:'Generated', up:'Uploaded'};
+
+  var s;
+  function fresh(){
+    var v = (s && s.variant) || 'chips';
+    s = {variant:v, gen:true, up:true, mode:'all', picked:null, each:{gi:'Character', gv:'Location', ui:'Prop', uv:'None'}, open:true};
+  }
+  fresh();
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function thumb(a, big){
+    var el = document.createElement('div');
+    var media = a.kind === 'image' || a.kind === 'video';
+    el.className = 'th ' + (media ? 'media' : 'file');
+    if (media) el.innerHTML = ART[a.id] + (a.kind === 'video' ? BADGE : '');
+    if (a.kind === 'audio') el.innerHTML = ICON.audio;
+    if (a.kind === 'doc') el.innerHTML = ICON.doc;
+    if (!big){ el.setAttribute('role','img'); el.setAttribute('aria-label', NAME[a.id] + ', ' + SRC[a.src].toLowerCase()); el.title = NAME[a.id]; }
+    else el.setAttribute('aria-hidden','true');
+    return el;
+  }
+
+  function included(a){ return a.src === 'gen' ? s.gen : s.up; }
+  // Element choice is independent of the "Saving to" checkboxes
+  function eligible(){ return ASSETS.filter(function(a){ return a.kind === 'image' || a.kind === 'video'; }); }
+  function elementOf(a){
+    if (a.kind !== 'image' && a.kind !== 'video') return null;
+    if (s.mode === 'all') return s.picked;
+    var v = s.each[a.id]; return v && v !== 'None' ? v : null;
+  }
+  function savedCount(){ return ASSETS.filter(function(a){ return included(a) || elementOf(a); }).length; }
+
+  function plural(n, word){ return n + ' ' + word + (n === 1 ? '' : 's'); }
+  function eligibleText(list){
+    var i = list.filter(function(a){return a.kind==='image';}).length;
+    var v = list.filter(function(a){return a.kind==='video';}).length;
+    var parts = [];
+    if (i) parts.push(plural(i,'image'));
+    if (v) parts.push(plural(v,'video'));
+    return parts.join(' and ');
+  }
+
+  function render(){
+    // toolbar + panel visibility
+    $('libBtn').setAttribute('aria-expanded', String(s.open));
+    $('panel').hidden = !s.open;
+
+    // variant control
+    document.querySelectorAll('[data-variant]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.variant === s.variant)); });
+
+    // thumbs
+    var t = $('thumbs'); t.innerHTML = '';
+    ASSETS.forEach(function(a, i){
+      if (i === 4){ var d = document.createElement('div'); d.className = 'divider'; d.setAttribute('aria-hidden','true'); t.appendChild(d); }
+      var el = thumb(a, false);
+      if (!included(a) && !elementOf(a)) el.classList.add('off');
+      t.appendChild(el);
+    });
+
+    $('genRow').setAttribute('aria-pressed', String(s.gen));
+    $('upRow').setAttribute('aria-pressed', String(s.up));
+
+    // element section
+    var elig = eligible();
+    var sec = $('elSec');
+    sec.hidden = elig.length === 0;
+    var body = $('elBody'); body.innerHTML = '';
+    var hint = $('elHint');
+    var link = $('modeLink');
+
+    if (s.mode === 'all'){
+      var wrap = document.createElement('div');
+      wrap.className = s.variant === 'chips' ? 'chips' : 'list';
+      wrap.setAttribute('role','group');
+      wrap.setAttribute('aria-label','Element type');
+      TYPES.forEach(function(type){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(s.picked === type));
+        if (s.variant === 'chips'){ b.className = 'chip'; b.textContent = type; }
+        else { b.className = 'lrow'; b.innerHTML = '<span>' + type + '</span><span class="radio"><i></i></span>'; }
+        b.addEventListener('click', function(){ s.picked = s.picked === type ? null : type; render(); });
+        wrap.appendChild(b);
+      });
+      body.appendChild(wrap);
+      var et = eligibleText(elig);
+      hint.textContent = s.picked
+        ? et.charAt(0).toUpperCase() + et.slice(1) + ' will also be saved as ' + s.picked + '.'
+        : 'Applies to ' + et + '. Audio or docs can’t be saved as an element.';
+      link.textContent = 'Choose for each asset';
+    } else {
+      var list = document.createElement('div'); list.className = 'each';
+      elig.forEach(function(a){
+        var row = document.createElement('div'); row.className = 'erow';
+        var who = document.createElement('div'); who.className = 'who';
+        who.appendChild(thumb(a, true));
+        var txt = document.createElement('div');
+        txt.innerHTML = '<b>' + NAME[a.id] + '</b><span>' + SRC[a.src] + '</span>';
+        who.appendChild(txt);
+        var val = s.each[a.id] || 'None';
+        var sel = document.createElement('div'); sel.className = 'sel' + (val !== 'None' ? ' on' : '');
+        var select = document.createElement('select');
+        select.setAttribute('aria-label', 'Element type for ' + NAME[a.id]);
+        ['None'].concat(TYPES).forEach(function(o){
+          var op = document.createElement('option'); op.textContent = o; if (o === val) op.selected = true; select.appendChild(op);
+        });
+        select.addEventListener('change', function(){ s.each[a.id] = select.value; render(); });
+        sel.appendChild(select);
+        sel.insertAdjacentHTML('beforeend', ICON.chev);
+        row.appendChild(who); row.appendChild(sel);
+        list.appendChild(row);
+      });
+      body.appendChild(list);
+      hint.textContent = 'Audio or docs can’t be saved as an element.';
+      link.textContent = 'Apply one type to all';
+    }
+
+    // save
+    $('saveBtn').disabled = savedCount() === 0;
+  }
+
+  var toastTimer;
+  function toast(msg){
+    $('toastText').textContent = msg;
+    var el = $('toast');
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 4000);
+  }
+
+  $('genRow').addEventListener('click', function(){ s.gen = !s.gen; render(); });
+  $('upRow').addEventListener('click', function(){ s.up = !s.up; render(); });
+  $('modeLink').addEventListener('click', function(){
+    if (s.mode === 'all'){
+      // carry a chosen type into each row as a starting point
+      if (s.picked){ ['gi','gv','ui','uv'].forEach(function(k){ s.each[k] = s.picked; }); }
+      s.mode = 'each';
+    } else {
+      s.mode = 'all';
+    }
+    render();
+  });
+  $('saveBtn').addEventListener('click', function(){
+    var n = savedCount();
+    var dupes = $('dupes').checked ? Math.min(2, n) : 0;
+    toast(dupes ? (n - dupes) + ' saved · ' + dupes + ' already in library' : plural(n, 'item') + ' saved to library');
+    s.open = false; render();
+  });
+  $('libBtn').addEventListener('click', function(){ s.open = !s.open; render(); });
+  $('toastView').addEventListener('click', function(e){ e.preventDefault(); });
+  $('reset').addEventListener('click', function(){ fresh(); $('toast').classList.remove('show'); render(); });
+  document.querySelectorAll('[data-variant]').forEach(function(b){
+    b.addEventListener('click', function(){ s.variant = b.dataset.variant; render(); });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
